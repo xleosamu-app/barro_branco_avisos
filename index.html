@@ -3,59 +3,623 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Quadro de avisos online da Congregação Barro Branco, atualizado automaticamente por uma planilha pública.">
-  <title>ANÚNCIOS BARRO BRANCO - 86447/SP-104</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#0d0f14">
+  <meta name="description" content="Quadro de avisos online da Congregação Barro Branco.">
+  <title>Anúncios — Congregação Barro Branco</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg:       #0d0f14;
+      --surface:  #13161e;
+      --surface2: #1a1e29;
+      --border:   #252a38;
+      --accent:   #6c8cff;
+      --accent2:  #8b6cff;
+      --glow:     rgba(108,140,255,0.15);
+      --success:  #4caf80;
+      --warn:     #f5a623;
+      --error:    #ff5f5f;
+      --text:     #e4e6f0;
+      --muted:    #8892a4;
+      --font:     'Inter', system-ui, sans-serif;
+      --ease:     0.2s cubic-bezier(.4,0,.2,1);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      line-height: 1.6;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(ellipse 80% 40% at 50% -5%,
+          rgba(108,140,255,0.09) 0%, transparent 65%),
+        repeating-linear-gradient(0deg, transparent, transparent 39px,
+          rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px),
+        repeating-linear-gradient(90deg, transparent, transparent 39px,
+          rgba(255,255,255,0.012) 39px, rgba(255,255,255,0.012) 40px);
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1080px;
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+    }
+
+    /* ── Aviso de arquivo local ── */
+    .local-warn {
+      display: none;
+      background: rgba(245,166,35,0.1);
+      border-bottom: 1px solid rgba(245,166,35,0.35);
+      padding: 0.75rem 1rem;
+    }
+    .local-warn.visivel { display: block; }
+    .local-warn-inner {
+      max-width: 1080px;
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      font-size: 0.84rem;
+      color: var(--warn);
+    }
+    .local-warn-inner .icone { font-size: 1.2rem; flex-shrink: 0; margin-top: 1px; }
+    .local-warn strong { display: block; font-size: 0.88rem; margin-bottom: 0.1rem; }
+    .local-warn p { color: rgba(245,166,35,0.85); font-size: 0.8rem; }
+
+    /* ── Header ── */
+    .site-header {
+      background: linear-gradient(135deg, #181c28 0%, #0d0f14 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.2rem 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(16px);
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .header-text h1 {
+      font-size: clamp(1rem, 2.8vw, 1.4rem);
+      font-weight: 800;
+      background: linear-gradient(90deg, #fff 0%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: -0.02em;
+    }
+
+    .header-text p {
+      font-size: 0.74rem;
+      color: var(--muted);
+      margin-top: 0.1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      background: rgba(76,175,128,0.1);
+      border: 1px solid rgba(76,175,128,0.3);
+      border-radius: 999px;
+      padding: 0.28rem 0.75rem;
+      font-size: 0.67rem;
+      font-weight: 700;
+      color: var(--success);
+      letter-spacing: 0.1em;
+      flex-shrink: 0;
+    }
+
+    .pulse {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--success);
+      animation: blink 2s ease-in-out infinite;
+    }
+
+    @keyframes blink {
+      0%,100% { opacity:1; transform:scale(1); }
+      50%      { opacity:0.3; transform:scale(0.6); }
+    }
+
+    /* ── Main ── */
+    main { flex: 1; padding-block: 1.75rem; }
+
+    /* ── Status bar ── */
+    .statusbar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 0.9rem 1.2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      flex: 1;
+      min-width: 120px;
+    }
+
+    .stat-icon { font-size: 1.25rem; flex-shrink: 0; }
+
+    .stat-label {
+      font-size: 0.67rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .btn-refresh {
+      margin-left: auto;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1.1rem;
+      font-family: var(--font);
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      box-shadow: 0 4px 14px rgba(108,140,255,0.3);
+      transition: var(--ease);
+      white-space: nowrap;
+    }
+    .btn-refresh:hover    { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,140,255,0.45); }
+    .btn-refresh:active   { transform: translateY(0); }
+    .btn-refresh:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+    .btn-refresh.spin .ico { display: inline-block; animation: rodar 0.7s linear infinite; }
+    @keyframes rodar { to { transform: rotate(360deg); } }
+
+    /* ── Loading ── */
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.9rem;
+      padding: 3rem 1rem;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .loading.oculto { display: none; }
+
+    .spinner {
+      width: 26px; height: 26px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: rodar 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Erro ── */
+    .error-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.65rem;
+      background: rgba(255,95,95,0.07);
+      border: 1px solid rgba(255,95,95,0.28);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .error-box.oculto { display: none; }
+    .error-box p { color: var(--error); font-size: 0.88rem; font-weight: 500; }
+
+    .btn-retry {
+      background: transparent;
+      border: 1px solid var(--error);
+      color: var(--error);
+      border-radius: 6px;
+      padding: 0.38rem 0.9rem;
+      font-family: var(--font);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--ease);
+    }
+    .btn-retry:hover { background: var(--error); color: #fff; }
+
+    /* ── Columns ── */
+    .columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      align-items: start;
+    }
+
+    .col {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 1.4rem;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+      transition: border-color var(--ease), box-shadow var(--ease);
+    }
+    .col:hover {
+      border-color: rgba(108,140,255,0.3);
+      box-shadow: 0 0 22px var(--glow), 0 4px 24px rgba(0,0,0,0.4);
+    }
+
+    .col-title {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.8rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      padding-bottom: 0.75rem;
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Cards ── */
+    .cards { display: flex; flex-direction: column; gap: 0.65rem; }
+
+    .card {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem 0.9rem 1.1rem;
+      position: relative;
+      overflow: hidden;
+      transition: border-color var(--ease), transform var(--ease), box-shadow var(--ease);
+      animation: subir 0.35s ease both;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0 auto 0 0;
+      width: 3px;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent2) 100%);
+    }
+
+    .card:hover {
+      border-color: rgba(108,140,255,0.35);
+      transform: translateX(4px);
+      box-shadow: 0 4px 18px rgba(0,0,0,0.28);
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: var(--text);
+      line-height: 1.6;
+      padding-left: 0.2rem;
+    }
+
+    .empty {
+      padding: 2rem 0.5rem;
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    @keyframes subir {
+      from { opacity:0; transform:translateY(10px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    /* ── Footer ── */
+    .site-footer {
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      padding: 1.1rem 0;
+      margin-top: auto;
+    }
+    .footer-inner {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.76rem;
+      color: var(--muted);
+    }
+    .footer-inner strong { color: var(--text); }
+    .footer-sub { font-size: 0.7rem; opacity: 0.55; }
+
+    @media (max-width: 680px) {
+      .columns { grid-template-columns: 1fr; }
+      .live-badge { display: none; }
+      .btn-refresh { width: 100%; justify-content: center; margin-left: 0; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 400px) {
+      .stat { flex-basis: 100%; }
+    }
+  </style>
 </head>
 <body>
-  <header class="site-header">
-    <div class="container">
-      <h1>ANÚNCIOS BARRO BRANCO - 86447/SP-104</h1>
-      <p class="header-line" aria-hidden="true"></p>
+
+<!-- Aviso: arquivo aberto localmente -->
+<div class="local-warn" id="aviso-local">
+  <div class="local-warn-inner">
+    <span class="icone">⚠️</span>
+    <div>
+      <strong>Arquivo aberto localmente — os dados não serão carregados.</strong>
+      <p>
+        O browser bloqueia conexões externas quando o arquivo é aberto direto pelo explorador de arquivos (<code>file://</code>).
+        Faça o upload no <strong>GitHub Pages</strong> e acesse pelo link gerado — funcionará perfeitamente.
+      </p>
     </div>
-  </header>
+  </div>
+</div>
 
-  <main class="container" id="conteudo-principal">
-    <section class="dashboard" aria-label="Resumo do quadro de avisos">
-      <div class="status-panel">
-        <p class="status-label">Anúncios carregados</p>
-        <strong id="announcement-count">0</strong>
+<!-- HEADER -->
+<header class="site-header" role="banner">
+  <div class="container header-inner">
+    <div class="header-text">
+      <h1>Congregação Barro Branco</h1>
+      <p>Quadro de Anúncios Oficial · 86447 / SP-104</p>
+    </div>
+    <div class="live-badge" aria-hidden="true">
+      <span class="pulse"></span>AO VIVO
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="container">
+
+  <section class="statusbar" aria-label="Status">
+    <div class="stat">
+      <span class="stat-icon" aria-hidden="true">📢</span>
+      <div>
+        <p class="stat-label">Anúncios carregados</p>
+        <strong id="el-count" aria-live="polite">—</strong>
       </div>
-
-      <div class="status-panel">
-        <p class="status-label">Última atualização</p>
-        <strong id="last-updated">Aguardando dados...</strong>
-      </div>
-
-      <button class="refresh-button" id="refresh-button" type="button">
-        Atualizar agora
-      </button>
-    </section>
-
-    <div class="loading" id="loading" role="status" aria-live="polite">
-      <span class="spinner" aria-hidden="true"></span>
-      <span>Carregando anúncios...</span>
     </div>
 
-    <section class="columns" aria-label="Quadro de avisos">
-      <div class="column">
-        <h2>📅 PRÓXIMOS EVENTOS DA CONGREGAÇÃO!</h2>
-        <div class="cards-list" id="event-cards" aria-live="polite"></div>
+    <div class="stat">
+      <span class="stat-icon" aria-hidden="true">🕐</span>
+      <div>
+        <p class="stat-label">Última atualização</p>
+        <strong id="el-updated" aria-live="polite">Aguardando...</strong>
       </div>
-
-      <div class="column">
-        <h2>🔗 LINKS ÚTEIS</h2>
-        <div class="cards-list" id="link-cards" aria-live="polite"></div>
-      </div>
-    </section>
-  </main>
-
-  <footer class="site-footer">
-    <div class="container">
-      <p>Atualizado automaticamente a cada 60 segundos.</p>
     </div>
-  </footer>
 
-  <script src="script.js"></script>
+    <button class="btn-refresh" id="btn-refresh" type="button" aria-label="Atualizar anúncios">
+      <span class="ico" aria-hidden="true">↻</span> Atualizar
+    </button>
+  </section>
+
+  <div class="loading" id="el-loading" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <span>Carregando anúncios...</span>
+  </div>
+
+  <div class="error-box oculto" id="el-error" role="alert">
+    <span aria-hidden="true" style="font-size:1.6rem">⚠️</span>
+    <p id="el-error-msg">Erro ao carregar os dados.</p>
+    <button type="button" id="btn-retry" class="btn-retry">Tentar novamente</button>
+  </div>
+
+  <section class="columns" aria-label="Quadro de avisos">
+    <div class="col">
+      <h2 class="col-title"><span aria-hidden="true">📅</span> Próximos Eventos</h2>
+      <div class="cards" id="col-eventos" aria-live="polite"></div>
+    </div>
+
+    <div class="col">
+      <h2 class="col-title"><span aria-hidden="true">📋</span> Anúncios</h2>
+      <div class="cards" id="col-anuncios" aria-live="polite"></div>
+    </div>
+  </section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="site-footer" role="contentinfo">
+  <div class="container footer-inner">
+    <p>Atualizado ao carregar a página. Clique em <strong>Atualizar</strong> para buscar novos dados.</p>
+    <p class="footer-sub">Congregação Barro Branco &mdash; Testemunhas de Jeová</p>
+  </div>
+</footer>
+
+<script>
+'use strict';
+
+/* ── URL pública da planilha (CSV) ─────────────────────────── */
+const CSV_URL =
+  'https://docs.google.com/spreadsheets/d/e/' +
+  '2PACX-1vSOx5AttfRIg_BsPFD8i8NK-amMA_0f-KXuU8Zu_tIcohE6Bs-5K-FLTdt9WNgLoRS7nO0KNdezDmDU' +
+  '/pub?output=csv';
+
+/* ── DOM ───────────────────────────────────────────────────── */
+const avisoLocal = document.getElementById('aviso-local');
+const elLoading  = document.getElementById('el-loading');
+const elError    = document.getElementById('el-error');
+const elErrorMsg = document.getElementById('el-error-msg');
+const elCount    = document.getElementById('el-count');
+const elUpdated  = document.getElementById('el-updated');
+const colEventos = document.getElementById('col-eventos');
+const colAnuncios= document.getElementById('col-anuncios');
+const btnRefresh = document.getElementById('btn-refresh');
+const btnRetry   = document.getElementById('btn-retry');
+
+/* ── Helpers ───────────────────────────────────────────────── */
+function horaAtual() {
+  return new Date().toLocaleTimeString('pt-BR');
+}
+
+function setLoading(ativo) {
+  if (ativo) {
+    elLoading.classList.remove('oculto');
+    elError.classList.add('oculto');
+    btnRefresh.classList.add('spin');
+    btnRefresh.disabled = true;
+  } else {
+    elLoading.classList.add('oculto');
+    btnRefresh.classList.remove('spin');
+    btnRefresh.disabled = false;
+  }
+}
+
+function setErro(msg) {
+  elErrorMsg.textContent = msg;
+  elError.classList.remove('oculto');
+  elUpdated.textContent  = 'Erro — ' + horaAtual();
+}
+
+/* ── Parse CSV simples ─────────────────────────────────────── */
+// Suporta campos entre aspas com vírgulas internas
+function parseCSV(texto) {
+  const linhas = texto.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
+  return linhas
+    .filter(l => l.trim() !== '')
+    .map(linha => {
+      const cells = [];
+      let atual = '', aspas = false;
+      for (let i = 0; i < linha.length; i++) {
+        const ch = linha[i];
+        if (ch === '"') {
+          if (aspas && linha[i+1] === '"') { atual += '"'; i++; }
+          else aspas = !aspas;
+        } else if (ch === ',' && !aspas) {
+          cells.push(atual.trim()); atual = '';
+        } else {
+          atual += ch;
+        }
+      }
+      cells.push(atual.trim());
+      return cells;
+    });
+}
+
+/* ── Renderização ──────────────────────────────────────────── */
+function criarCard(texto, delay) {
+  const div = document.createElement('div');
+  div.className = 'card';
+  div.style.animationDelay = delay + 'ms';
+  const p = document.createElement('p');
+  p.textContent = texto;
+  div.appendChild(p);
+  return div;
+}
+
+function renderizar(linhas) {
+  colEventos.innerHTML  = '';
+  colAnuncios.innerHTML = '';
+
+  const listaA = [], listaB = [];
+
+  // Percorre todas as linhas sem limite
+  for (const row of linhas) {
+    const a = (row[0] || '').trim();
+    const b = (row[1] || '').trim();
+    if (a) listaA.push(a);
+    if (b) listaB.push(b);
+  }
+
+  function popular(container, lista) {
+    if (lista.length === 0) {
+      const d = document.createElement('div');
+      d.className = 'empty';
+      d.textContent = 'Nenhum item cadastrado.';
+      container.appendChild(d);
+    } else {
+      lista.forEach((txt, i) => container.appendChild(criarCard(txt, i * 55)));
+    }
+  }
+
+  popular(colEventos,  listaA);
+  popular(colAnuncios, listaB);
+
+  elCount.textContent   = listaA.length + listaB.length;
+  elUpdated.textContent = horaAtual();
+}
+
+/* ── Carregamento ──────────────────────────────────────────── */
+async function carregar() {
+  // Se aberto via file://, não tenta carregar (vai falhar sempre)
+  if (window.location.protocol === 'file:') {
+    avisoLocal.classList.add('visivel');
+    setLoading(false);
+    elLoading.classList.add('oculto');
+    return;
+  }
+
+  setLoading(true);
+
+  try {
+    // Cache-bust para sempre buscar dados frescos
+    const resp = await fetch(CSV_URL + '&_=' + Date.now());
+
+    if (!resp.ok) {
+      throw new Error('Servidor retornou erro ' + resp.status +
+        '. Verifique se a planilha está publicada.');
+    }
+
+    const texto = await resp.text();
+
+    // Segurança: resposta não pode ser HTML
+    if (texto.trim().startsWith('<')) {
+      throw new Error('A planilha não está publicada como CSV. ' +
+        'Vá em Arquivo → Compartilhar → Publicar na web → CSV.');
+    }
+
+    const todasLinhas = parseCSV(texto);
+
+    // Remove cabeçalho (primeira linha)
+    if (todasLinhas.length < 2) {
+      throw new Error('A planilha não tem dados para exibir.');
+    }
+
+    renderizar(todasLinhas.slice(1));
+
+  } catch (err) {
+    console.error('[Barro Branco]', err);
+    setErro(err.message || 'Não foi possível carregar os anúncios.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+/* ── Eventos & Init ────────────────────────────────────────── */
+btnRefresh.addEventListener('click', carregar);
+btnRetry.addEventListener('click', carregar);
+
+carregar();
+</script>
 </body>
 </html>
